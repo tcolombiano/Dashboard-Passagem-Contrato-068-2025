@@ -141,7 +141,6 @@
         .chart-box.full {
             grid-column: 1 / -1;
         }
-        /* Explicação do Burndown */
         .explicacao-burndown {
             margin-top: 16px;
             padding: 14px 16px;
@@ -194,7 +193,8 @@
         .footer-insight strong {
             font-weight: 700;
         }
-        .tabela-completa {
+        .tabela-completa,
+        .ranking-servidores {
             background: white;
             border-radius: 12px;
             padding: 20px;
@@ -202,19 +202,22 @@
             margin-top: 24px;
             border-top: 4px solid #8b5cf6;
         }
-        .tabela-completa h3 {
+        .tabela-completa h3,
+        .ranking-servidores h3 {
             font-size: 16px;
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 12px;
         }
-        .tabela-completa .filtro {
+        .tabela-completa .filtro,
+        .ranking-servidores .filtro {
             display: flex;
             gap: 12px;
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        .tabela-completa .filtro input {
+        .tabela-completa .filtro input,
+        .ranking-servidores .filtro input {
             flex: 1;
             padding: 8px 12px;
             border: 1px solid #d1d5db;
@@ -222,16 +225,19 @@
             font-size: 14px;
             outline: none;
         }
-        .tabela-completa .filtro input:focus {
+        .tabela-completa .filtro input:focus,
+        .ranking-servidores .filtro input:focus {
             border-color: #8b5cf6;
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
         }
-        .tabela-completa table {
+        .tabela-completa table,
+        .ranking-servidores table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
         }
-        .tabela-completa th {
+        .tabela-completa th,
+        .ranking-servidores th {
             background: #f1f5f9;
             text-align: left;
             padding: 10px 12px;
@@ -240,20 +246,36 @@
             position: sticky;
             top: 0;
         }
-        .tabela-completa td {
+        .tabela-completa td,
+        .ranking-servidores td {
             padding: 8px 12px;
             border-bottom: 1px solid #e2e8f0;
         }
-        .tabela-completa tr:hover {
+        .tabela-completa tr:hover,
+        .ranking-servidores tr:hover {
             background: #f8fafc;
         }
-        .tabela-completa .valor {
+        .tabela-completa .valor,
+        .ranking-servidores .valor {
             text-align: right;
             font-weight: 600;
         }
         .tabela-wrapper {
             max-height: 400px;
             overflow-y: auto;
+        }
+        .ranking-wrapper {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .badge {
+            display: inline-block;
+            background: #e2e8f0;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
         }
         @media (max-width: 768px) {
             .charts-row,
@@ -263,7 +285,8 @@
             .cards-grid {
                 grid-template-columns: 1fr 1fr;
             }
-            .tabela-completa table {
+            .tabela-completa table,
+            .ranking-servidores table {
                 font-size: 12px;
             }
         }
@@ -358,7 +381,6 @@
                 <div style="font-size:12px; color:#94a3b8; text-align:center; margin-top:6px;">
                     * Linha contínua = histórico real | Linha tracejada = projeção
                 </div>
-                <!-- NOVA EXPLICAÇÃO DO BURNDOWN -->
                 <div class="explicacao-burndown">
                     <strong>📖 O que é o gráfico Burndown?</strong><br />
                     O Burndown é um gráfico usado em metodologias ágeis, como o Scrum, para monitorar o andamento de um projeto.
@@ -398,7 +420,33 @@
             </div>
         </div>
 
-        <!-- TABELA COMPLETA -->
+        <!-- RANKING DE VIAGENS POR SERVIDOR (NOVO) -->
+        <div class="ranking-servidores">
+            <h3>📊 Ranking de Viagens por Servidor</h3>
+            <div class="filtro">
+                <input type="text" id="buscaRanking" placeholder="🔍 Filtrar por nome do servidor..." oninput="filtrarRanking()" />
+            </div>
+            <div class="ranking-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Servidor</th>
+                            <th style="text-align:center;">Viagens</th>
+                            <th style="text-align:right;">Total Gasto (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankingBody">
+                        <!-- preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px; font-size:13px; color:#64748b;">
+                Total de servidores: <span id="totalServidoresRanking">0</span>
+            </div>
+        </div>
+
+        <!-- TABELA COMPLETA DE PASSAGENS -->
         <div class="tabela-completa">
             <h3>📋 Lista Completa de Passagens (89 registros)</h3>
             <div class="filtro">
@@ -687,7 +735,56 @@
             `;
 
         // ================================================================
-        // PREENCHER TABELA COMPLETA
+        // RANKING DE VIAGENS POR SERVIDOR
+        // ================================================================
+        function calcularRanking() {
+            const contagem = {};
+            allPassagens.forEach(p => {
+                const nome = p.servidor.trim();
+                contagem[nome] = contagem[nome] || { viagens: 0, total: 0 };
+                contagem[nome].viagens += 1;
+                contagem[nome].total += p.valor;
+            });
+            // Converter para array e ordenar por número de viagens (decrescente)
+            const ranking = Object.keys(contagem).map(nome => ({
+                nome: nome,
+                viagens: contagem[nome].viagens,
+                total: contagem[nome].total
+            }));
+            ranking.sort((a, b) => b.viagens - a.viagens);
+            return ranking;
+        }
+
+        let rankingData = calcularRanking();
+
+        function renderizarRanking(registros) {
+            const tbody = document.getElementById('rankingBody');
+            tbody.innerHTML = '';
+            registros.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td><strong>${item.nome}</strong></td>
+                        <td style="text-align:center;"><span class="badge">${item.viagens}</span></td>
+                        <td style="text-align:right; font-weight:600;">${formatCurrency(item.total)}</td>
+                    `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('totalServidoresRanking').textContent = registros.length;
+        }
+
+        renderizarRanking(rankingData);
+
+        function filtrarRanking() {
+            const busca = document.getElementById('buscaRanking').value.toLowerCase();
+            const filtrados = rankingData.filter(item =>
+                item.nome.toLowerCase().includes(busca)
+            );
+            renderizarRanking(filtrados);
+        }
+
+        // ================================================================
+        // PREENCHER TABELA COMPLETA DE PASSAGENS
         // ================================================================
         function renderizarTabela(registros) {
             const tbody = document.getElementById('tabelaBody');
