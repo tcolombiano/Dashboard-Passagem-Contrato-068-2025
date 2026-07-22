@@ -6,8 +6,6 @@
     <title>Dashboard - Contrato 068/2025</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
-    </script>
     <style>
         * {
             margin: 0;
@@ -21,7 +19,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 1280px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         .header {
@@ -94,9 +92,6 @@
         .card.indigo {
             border-top-color: #6366f1;
         }
-        .card.pink {
-            border-top-color: #ec4899;
-        }
         .card .value.green-text {
             color: #22c55e;
         }
@@ -167,51 +162,75 @@
             border: 1px solid #bfdbfe;
             color: #1e40af;
             font-size: 14px;
+            margin-top: 24px;
         }
         .footer-insight strong {
             font-weight: 700;
         }
-        /* Tabela de servidores */
-        .top-servidores-card {
+
+        /* Tabela completa */
+        .tabela-completa {
             background: white;
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
+            margin-top: 24px;
             border-top: 4px solid #8b5cf6;
         }
-        .top-servidores-card h3 {
+        .tabela-completa h3 {
             font-size: 16px;
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 12px;
         }
-        .top-servidores-card table {
+        .tabela-completa .filtro {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .tabela-completa .filtro input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .tabela-completa .filtro input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+        .tabela-completa table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 13px;
         }
-        .top-servidores-card th {
+        .tabela-completa th {
             background: #f1f5f9;
             text-align: left;
-            padding: 8px 12px;
+            padding: 10px 12px;
             font-weight: 600;
             color: #475569;
+            position: sticky;
+            top: 0;
         }
-        .top-servidores-card td {
+        .tabela-completa td {
             padding: 8px 12px;
             border-bottom: 1px solid #e2e8f0;
         }
-        .top-servidores-card tr:last-child td {
-            border-bottom: none;
+        .tabela-completa tr:hover {
+            background: #f8fafc;
         }
-        .top-servidores-card .valor {
+        .tabela-completa .valor {
             text-align: right;
             font-weight: 600;
         }
-        .top-servidores-card .viagens {
-            text-align: right;
+        .tabela-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
         }
+
         @media (max-width: 768px) {
             .charts-row,
             .insights-row {
@@ -219,6 +238,9 @@
             }
             .cards-grid {
                 grid-template-columns: 1fr 1fr;
+            }
+            .tabela-completa table {
+                font-size: 12px;
             }
         }
         @media (max-width: 480px) {
@@ -282,7 +304,7 @@
             </div>
             <div class="card indigo">
                 <div class="label">📊 Total de Viagens Realizadas</div>
-                <div class="value indigo-text">88</div>
+                <div class="value indigo-text">89</div>
                 <div class="sub" id="mediaPorViagem"></div>
             </div>
         </div>
@@ -324,21 +346,31 @@
             </div>
         </div>
 
-        <!-- TOP SERVIDORES (NOVO) -->
-        <div class="top-servidores-card">
-            <h3>🏅 Top 5 Servidores com Maior Gasto Total</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Servidor</th>
-                        <th style="text-align:right;">Total Gasto</th>
-                        <th style="text-align:right;">Nº de Viagens</th>
-                    </tr>
-                </thead>
-                <tbody id="topServidoresBody">
-                    <!-- preenchido via JavaScript -->
-                </tbody>
-            </table>
+        <!-- TABELA COMPLETA COM TODOS OS SERVIDORES E VALORES -->
+        <div class="tabela-completa">
+            <h3>📋 Lista Completa de Passagens (89 registros)</h3>
+            <div class="filtro">
+                <input type="text" id="buscaServidor" placeholder="🔍 Filtrar por nome do servidor..." oninput="filtrarTabela()" />
+            </div>
+            <div class="tabela-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Servidor</th>
+                            <th>Destino</th>
+                            <th>Data da Compra</th>
+                            <th style="text-align:right;">Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody">
+                        <!-- preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px; font-size:13px; color:#64748b;">
+                Total: <span id="totalRegistros">89</span> registros
+            </div>
         </div>
 
         <!-- FOOTER INSIGHT -->
@@ -373,14 +405,149 @@
         zeroDate.setDate(zeroDate.getDate() + Math.round(daysToZero));
 
         // ================================================================
-        // DADOS DOS TOP SERVIDORES (extraídos da planilha)
+        // TODOS OS 89 REGISTROS (extraídos da planilha)
         // ================================================================
-        const topServidores = [
-            { nome: 'Rodrigo Pimentel de Souza Lima', total: 114544.72, viagens: 16 },
-            { nome: 'Maria do Rosário Costa Muricy (e Eduardo)', total: 34230.46, viagens: 5 },
-            { nome: 'Igor Oliveira Takenami', total: 26862.64, viagens: 8 },
-            { nome: 'Paulo Emanuel Pimenta dos Santos', total: 23469.66, viagens: 7 },
-            { nome: 'Daniel Peixoto de Albuquerque', total: 21196.39, viagens: 6 }
+        const allPassagens = [
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x Assunção x SSA', data: '01/11/2025', valor: 3128.16 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Porto Alegre x SSA', data: '03/11/2025',
+            valor: 1551.81 },
+            { servidor: 'Rodrigo Vilas Bôas de Sena', destino: 'SSA x Porto Alegre x SSA', data: '03/11/2025',
+            valor: 1373.49 },
+            { servidor: 'Maria do Rosário Costa Muricy e Eduardo Luiz da Conceição Pimenta', destino: 'SSA x Macapá x SSA',
+                data: '03/11/2025', valor: 10319.36 },
+            { servidor: 'Danielle Thomaz Ferreira Cintra', destino: 'SSA x Brasília x SSA', data: '03/11/2025',
+            valor: 2662.95 },
+            { servidor: 'Ivone Maria Silva Miranda', destino: 'SSA x Porto Alegre x SSA', data: '05/11/2025',
+            valor: 1462.6 },
+            { servidor: 'Maria Lícia Piñeiro Fernandez Telles', destino: 'SSA x Porto Alegre x SSA', data: '05/11/2025',
+                valor: 1462.6 },
+            { servidor: 'Geisiane Dias Magalhães', destino: 'SSA x Porto Alegre x SSA', data: '05/11/2025', valor: 1993.9 },
+            { servidor: 'Richard Mendes Dutzmann', destino: 'SP x SSA x SP', data: '06/11/2025', valor: 3723.34 },
+            { servidor: 'Paulo Emanuel Pimenta Dos Santos', destino: 'SSA x Porto Alegre x SSA', data: '06/11/2025',
+                valor: 2407.6 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Washington x SSA', data: '11/11/2025',
+                valor: 12849 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Washington x SSA', data: '18/11/2025',
+            valor: 455.2 },
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x São Paulo x SSA', data: '24/11/2025', valor: 1221.15 },
+            { servidor: 'Luiz Eduardo Barreto Perez', destino: 'RJ x Belo Horizonte x SSA', data: '27/11/2025',
+            valor: 5614.64 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'Montreal x SP x SSA', data: '10/12/2025',
+            valor: 9745.36 },
+            { servidor: 'Luiz Eduardo Perez e Jeferson Guimarães', destino: 'SSA x Porto Seguro x SSA', data: '10/01/2026',
+                valor: 5566.24 },
+            { servidor: 'Paulo Emanuel Pimenta dos Santos', destino: 'SSA x Florianópolis x SSA', data: '19/01/2026',
+                valor: 2087.32 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Macapá x SSA', data: '22/01/2026', valor: 1870.36 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Florianópolis x SSA', data: '22/01/2026',
+                valor: 1297.5 },
+            { servidor: 'Richard Mendes Dutzmann', destino: 'SSA x São Paulo x SSA', data: '27/01/2026', valor: 2268.4 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '03/02/2026', valor: 4524.18 },
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x Florianópolis x SSA', data: '10/02/2026', valor: 2908.32 },
+            { servidor: 'Paulo Emanuel Pimenta dos Santos, Adriano Oliveira Menezes, Lauro Macedo Costa Junior, Alim dos Prazeres Mota Junior, Marcos Britto Corrales, Geisiane Dias Magalhães e Alex Britto Dantas',
+                destino: 'SSA x Foz do Iguaçu x SSA', data: '24/02/2026', valor: 32286.75 },
+            { servidor: 'Maria do Rosário Costa Muricy e Eduardo Luiz da Conceição Pimenta', destino: 'SSA x Florianópolis x SSA',
+                data: '02/03/2026', valor: 12741.92 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '03/03/2026', valor: 5169.68 },
+            { servidor: 'Anderson Vasconconcelos Prazeres', destino: 'SSA x São Paulo x SSA', data: '05/03/2026',
+                valor: 1913.71 },
+            { servidor: 'Adriano Tambone e José Roberto da Silva Reis', destino: 'SSA x São Paulo x SSA', data: '06/03/2026',
+                valor: 4021.54 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '06/03/2026', valor: 2627.45 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Macapá x SSA', data: '10/03/2026', valor: 6308.28 },
+            { servidor: 'Maria do Rosário Costa Muricy e Eduardo Luiz da Conceição Pimenta', destino: 'SSA x Goiânia x SSA',
+                data: '11/03/2026', valor: 4537.88 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '13/03/2026', valor: 2872.43 },
+            { servidor: 'Thales José Costa de Almeida', destino: 'SSA x Porto Seguro x SSA', data: '13/03/2026',
+                valor: 2242.23 },
+            { servidor: 'Rodrigo Vilas Bôas de Sena', destino: 'SSA x Macapá x SSA', data: '16/03/2026', valor: 6141.44 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Macapá x SSA', data: '16/03/2026', valor: 3222.2 },
+            { servidor: 'Érica Nildes de Jesus Lago', destino: 'SSA x São Paulo x SSA', data: '19/03/2026', valor: 2275.97 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Macapá x SSA', data: '20/03/2026', valor: 3350 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '27/03/2026', valor: 2855.06 },
+            { servidor: 'Poliana Santana Peixoto', destino: 'SSA x Brasília x SSA', data: '08/04/2026', valor: 1548.56 },
+            { servidor: 'Daniel Peixoto de Albuquerque', destino: 'Belo Horizonte x SSA', data: '10/04/2026', valor: 3147.59 },
+            { servidor: 'Tayana Santana de Souza Moura, Márcio Serapião Batista e Paulo Emanuel Pimenta dos Santos',
+                destino: 'SSA x São Paulo x SSA', data: '10/04/2026', valor: 9423.78 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Brasília x SSA', data: '16/04/2026', valor: 1019.46 },
+            { servidor: 'Danielle Thomaz Ferreira Cintra', destino: 'SSA x São Paulo x SSA', data: '16/04/2026',
+                valor: 1453.11 },
+            { servidor: 'Tatiane Cezar Pereira e Lucas Morais Moreira', destino: 'SSA x Curitiba x SSA', data: '17/04/2026',
+                valor: 3580.98 },
+            { servidor: 'Thales José Costa de Almeida e Igor Oliveira Takenami', destino: 'SSA x São Paulo x SSA',
+                data: '23/04/2026', valor: 7072.94 },
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x Brasília x SSA', data: '24/04/2026', valor: 1457.52 },
+            { servidor: 'Paulo Emanuel Pimenta Dos Santos', destino: 'SSA x Fortaleza x SSA', data: '28/04/2026',
+                valor: 2724.38 },
+            { servidor: 'Rodrigo Vilas Bôas de Sena e Débora Cristina Fernandes Santos', destino: 'SSA x Fortaleza x SSA',
+                data: '28/04/2026', valor: 4040.46 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Brasília x SSA', data: '29/04/2026', valor: 2994 },
+            { servidor: 'Elba Cristina Sanches de Andrade', destino: 'SSA x Fortaleza x SSA', data: '29/04/2026',
+                valor: 2233.96 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Atlanta x SSA', data: '29/04/2026',
+                valor: 60668.85 },
+            { servidor: 'Elianna Almeida Rebouças e Francis Karol Gonçalves de Almeida', destino: 'SSA x Fortaleza x SSA',
+                data: '30/04/2026', valor: 4465.52 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Fortaleza x SSA', data: '30/04/2026',
+                valor: 3495.13 },
+            { servidor: 'Carolina Nascimento de Almeida', destino: 'SSA x São Paulo x SSA', data: '04/05/2026',
+                valor: 1179.13 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Atlanta x SSA', data: '04/05/2026', valor: 458.04 },
+            { servidor: 'Carolina Nascimento de Almeida e Neyla Maria Rodrigues Guedes Santana',
+                destino: 'SSA x Brasília x SSA', data: '04/05/2026', valor: 8207 },
+            { servidor: 'Luiz Eduardo Barreto Perez', destino: 'Belo Horizonte x Brasília x SSA', data: '05/05/2026',
+                valor: 2750.1 },
+            { servidor: 'Cristiane Souza Nascimento e Jurandi Moreira Angelim Júnior', destino: 'SSA x Fortaleza x SSA',
+                data: '05/05/2026', valor: 4561.56 },
+            { servidor: 'Igor Oliveira Takenami e Josefina Elvira Trindade Ramos Rios', destino: 'SSA x Fortaleza x SSA',
+                data: '05/05/2026', valor: 6536.48 },
+            { servidor: 'Geisiane Dias Magalhães', destino: 'SSA x Fortaleza x SSA', data: '06/05/2026', valor: 3489.43 },
+            { servidor: 'Flávio Machado Barbosa, Larissa de Oliveira Vargas Vivas, Nilza de Carvalho Rios, Herberth Passos Lima, Adroaldo José Paranhos Bispo e Ingrid Kaliane Neri Boa Morte',
+                destino: 'SSA x Fortaleza x SSA', data: '07/05/2026', valor: 22222.14 },
+            { servidor: 'Antoniel Pinheiro Barros', destino: 'SSA x Fortaleza x SSA', data: '07/05/2026', valor: 3456.68 },
+            { servidor: 'Adriano Tambone e Michele Lopes de Castro', destino: 'SSA x Fortaleza x SSA', data: '08/05/2026',
+                valor: 8558.74 },
+            { servidor: 'Lucas Morais Moreira', destino: 'SSA x Fortaleza x SSA', data: '08/05/2026', valor: 4076.94 },
+            { servidor: 'Hemerson Cardoso Guimarães', destino: 'SSA x Fortaleza x SSA', data: '08/05/2026', valor: 3740.23 },
+            { servidor: 'Eliene Miranda Pessoa', destino: 'SSA x Fortaleza x SSA', data: '08/05/2026', valor: 3740.23 },
+            { servidor: 'Maria do Rosário Costa Muricy', destino: 'SSA x Fortaleza x SSA', data: '11/05/2026', valor: 3743.54 },
+            { servidor: 'Carla Farias Círiaco', destino: 'SSA x Barreiras x SSA', data: '11/05/2026', valor: 6616.3 },
+            { servidor: 'Ernatan Waslancristian de Souza Barbosa', destino: 'SSA x Fortaleza x SSA', data: '13/05/2026',
+                valor: 3429.37 },
+            { servidor: 'Paulo Emanuel Pimenta dos Santos', destino: 'SSA x Fortaleza x SSA', data: '19/05/2026',
+                valor: 1268.22 },
+            { servidor: 'Juliana Rodrigues Carneiro Galvão e Mariza Oliveira Malta', destino: 'SSA x Brasília x SSA',
+                data: '20/05/2026', valor: 3551.62 },
+            { servidor: 'Adriano Tambone e José Roberto da Silva Reis', destino: 'SSA x São Paulo x SSA', data: '25/05/2026',
+                valor: 5244.06 },
+            { servidor: 'Thales José Costa de Almeida', destino: 'SSA x São Paulo x SSA', data: '25/05/2026', valor: 2622.03 },
+            { servidor: 'Danielle Thomaz Ferreira Cintra', destino: 'SSA x Fortaleza x SSA', data: '27/05/2026',
+                valor: 1206.28 },
+            { servidor: 'David Santos Cruz Carvalho', destino: 'SSA x Fortaleza x SSA', data: '28/05/2026', valor: 929.41 },
+            { servidor: 'Pedro Anselmo Andrade Menezes', destino: 'SSA x Fortaleza x SSA', data: '28/05/2026',
+                valor: 1047.45 },
+            { servidor: 'Mariana Barbosa Rache de Almeida', destino: 'SSA x Fortaleza x SSA', data: '28/05/2026',
+                valor: 929.41 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Brasília x SSA', data: '29/05/2026',
+                valor: 3326.74 },
+            { servidor: 'Thaís da Silva e Silva', destino: 'SSA x Brasília x SSA', data: '29/05/2026', valor: 2449.56 },
+            { servidor: 'Adriano Tambone e Robson Souza de Carvalho', destino: 'SSA x Fortaleza x SSA', data: '29/05/2026',
+                valor: 1675 },
+            { servidor: 'Paulo Emanuel Pimenta dos Santos', destino: 'SSA x Rio de Janeiro x SSA', data: '02/06/2026',
+                valor: 3530.07 },
+            { servidor: 'Nilza de Carvalho Rios', destino: 'SSA x Brasília x SSA', data: '02/06/2026', valor: 4906.38 },
+            { servidor: 'Geisiane Dias Magalhães, Ana Carolina de Brito Machado Ferraz, Márcio Serapião Batista, Cícera Glécia Alves da Silva e Ernatan Waslancristian de Souza Barbosa',
+                destino: 'SSA x Brasília x SSA', data: '16/06/2026', valor: 7246.85 },
+            { servidor: 'Paulo Emanuel Pimenta dos Santos', destino: 'SSA x São Paulo x SSA', data: '29/06/2026',
+                valor: 2028.29 },
+            { servidor: 'Rodrigo Pimentel de Souza Lima', destino: 'SSA x Teresina x SSA', data: '07/07/2026',
+                valor: 1932.79 },
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x Brasília x SSA', data: '10/07/2026', valor: 1413.06 },
+            { servidor: 'Geisiane Dias Magalhães', destino: 'SSA x São Paulo x SSA', data: '10/07/2026', valor: 1567.29 },
+            { servidor: 'Maria do Rosário Costa Muricy', destino: 'SSA x Porto Alegre x SSA', data: '14/07/2026',
+                valor: 2887.76 },
+            { servidor: 'Tayana Santana de Souza Moura', destino: 'SSA x Teresina x SSA', data: '16/07/2026', valor: 2691.33 },
+            { servidor: 'Igor Oliveira Takenami', destino: 'SSA x Teresina x SSA', data: '21/07/2026', valor: 3125.01 }
         ];
 
         // ================================================================
@@ -413,7 +580,8 @@
         document.getElementById('saldoProjetado').textContent = formatCurrency(Math.round(projectedEndBalance));
         document.getElementById('dataZera').textContent = formatDate(zeroDate);
 
-        const mediaPorViagem = totalSpent / 88;
+        const totalViagens = allPassagens.length;
+        const mediaPorViagem = totalSpent / totalViagens;
         document.getElementById('mediaPorViagem').textContent = 'Média de ' + formatCurrency(mediaPorViagem) + ' por viagem';
 
         document.getElementById('legendaDisponivel').textContent = formatCurrency(currentBalance);
@@ -425,18 +593,36 @@
             `;
 
         // ================================================================
-        // PREENCHER TABELA DE TOP SERVIDORES
+        // PREENCHER TABELA COMPLETA
         // ================================================================
-        const tbody = document.getElementById('topServidoresBody');
-        topServidores.forEach(serv => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                    <td><strong>${serv.nome}</strong></td>
-                    <td style="text-align:right; font-weight:600;">${formatCurrency(serv.total)}</td>
-                    <td style="text-align:right;">${serv.viagens}</td>
-                `;
-            tbody.appendChild(tr);
-        });
+        function renderizarTabela(registros) {
+            const tbody = document.getElementById('tabelaBody');
+            tbody.innerHTML = '';
+            registros.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td><strong>${item.servidor}</strong></td>
+                        <td>${item.destino}</td>
+                        <td>${item.data}</td>
+                        <td style="text-align:right; font-weight:600;">${formatCurrency(item.valor)}</td>
+                    `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('totalRegistros').textContent = registros.length;
+        }
+
+        // Renderizar todos
+        renderizarTabela(allPassagens);
+
+        // Filtro
+        function filtrarTabela() {
+            const busca = document.getElementById('buscaServidor').value.toLowerCase();
+            const filtrados = allPassagens.filter(item =>
+                item.servidor.toLowerCase().includes(busca)
+            );
+            renderizarTabela(filtrados);
+        }
 
         // ================================================================
         // GRÁFICO 1: DONUT
