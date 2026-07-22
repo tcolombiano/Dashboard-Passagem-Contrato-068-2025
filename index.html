@@ -141,6 +141,21 @@
         .chart-box.full {
             grid-column: 1 / -1;
         }
+        /* Explicação do Burndown */
+        .explicacao-burndown {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        .explicacao-burndown strong {
+            color: #f59e0b;
+            font-weight: 700;
+        }
         .insights-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -343,10 +358,20 @@
                 <div style="font-size:12px; color:#94a3b8; text-align:center; margin-top:6px;">
                     * Linha contínua = histórico real | Linha tracejada = projeção
                 </div>
+                <!-- NOVA EXPLICAÇÃO DO BURNDOWN -->
+                <div class="explicacao-burndown">
+                    <strong>📖 O que é o gráfico Burndown?</strong><br />
+                    O Burndown é um gráfico usado em metodologias ágeis, como o Scrum, para monitorar o andamento de um projeto.
+                    Ele mostra a quantidade de trabalho que ainda precisa ser feita em relação ao tempo restante,
+                    permitindo que a equipe veja se conseguirá entregar tudo no prazo.
+                    <br /><br />
+                    <strong>Neste caso:</strong> A linha verde mostra o saldo real do contrato ao longo do tempo (consumo de recursos),
+                    enquanto a linha amarela tracejada projeta o saldo futuro com base no ritmo atual de gastos.
+                </div>
             </div>
         </div>
 
-        <!-- NOVO GRÁFICO DE BARRAS: GASTO MENSAL -->
+        <!-- GRÁFICO DE BARRAS: GASTO MENSAL -->
         <div class="charts-row">
             <div class="chart-box full">
                 <h3>📊 Gasto Mensal (Acumulado por Mês)</h3>
@@ -447,7 +472,7 @@
         ];
 
         // Média mensal (total gasto / 9 meses)
-        const mediaMensal = totalSpent / 9; // 9 meses decorridos
+        const mediaMensal = totalSpent / 9;
 
         // ================================================================
         // TODOS OS 89 REGISTROS (extraídos da planilha)
@@ -650,7 +675,6 @@
         const mediaPorViagem = totalSpent / totalViagens;
         document.getElementById('mediaPorViagem').textContent = 'Média de ' + formatCurrency(mediaPorViagem) + ' por viagem';
 
-        // Média Mensal
         document.getElementById('mediaMensal').textContent = formatCurrency(mediaMensal);
 
         document.getElementById('legendaDisponivel').textContent = formatCurrency(currentBalance);
